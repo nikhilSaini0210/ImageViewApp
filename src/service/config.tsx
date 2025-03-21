@@ -1,1 +1,1 @@
-export const BASE_URL = 'http://dev3.xicomtechnologies.com/xttest';
+export const BASE_URL = 'https://dev3.xicomtechnologies.com/xttest';

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {BASE_URL} from './config';
+import { Alert } from 'react-native';
 
 export const getImages = async (newOffset: any) => {
   try {
@@ -14,6 +15,7 @@ export const getImages = async (newOffset: any) => {
 
     return response?.data;
   } catch (error) {
+    Alert.alert('Error', 'Network Error');
     console.error(error);
   }
 };
@@ -44,6 +46,7 @@ export const savePost = async (data: SavePostData) => {
     });
     return res?.data;
   } catch (error) {
+    Alert.alert('Error', 'Network Error');
     console.error(error);
   }
 };

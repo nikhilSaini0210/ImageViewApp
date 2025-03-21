@@ -1,6 +1,6 @@
 import {Image, StyleSheet, View} from 'react-native';
 import React, {useEffect} from 'react';
-import Logo from '@assets/images/logo.png';
+import Logo from '@assets/images/logo.jpg';
 import {Colors} from '@utils/Constants';
 import {screenHeight, screenWidth} from '@utils/Scaling';
 import {resetAndNavigate} from '@utils/NavigationUtils';

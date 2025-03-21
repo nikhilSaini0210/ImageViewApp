@@ -10,7 +10,7 @@
     "test": "jest",
     "link:fonts": "npx react-native-asset",
     "pod-install": "cd ios && RCT_NEW_ARCH_ENABLED=1 bundle exec pod install",
-    "create-apk": "cd android && ./gradlew assembleRelease"
+    "create-apk": "cd android && gradlew assembleRelease"
   },
   "dependencies": {
     "@react-navigation/native": "^7.0.17",

@@ -82,7 +82,9 @@ const DetailsScreen = () => {
           <View style={styles.subContainer}>
             <View style={styles.imageConatiner}>
               <Image
-                source={{uri: item?.xt_image}}
+                source={{
+                  uri: item.xt_image,
+                }}
                 style={[
                   styles.image,
                   item?.aspectRatio ? {aspectRatio: item.aspectRatio} : {},

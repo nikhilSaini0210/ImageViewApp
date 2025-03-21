@@ -1,17 +1,19 @@
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {FC, useEffect, useState} from 'react';
+import React, {FC, useCallback, useEffect, useState} from 'react';
 import {getImages} from '@service/apiServices';
 import {navigate} from '@utils/NavigationUtils';
 import {Routes} from '@navigation/Routes';
-import {Colors} from '@utils/Constants';
+import {Colors, Fonts} from '@utils/Constants';
 import CustomButton from '@components/CustomButton';
+import CustomText from '@components/CustomText';
 
 interface ImageData {
   id: string;
@@ -23,6 +25,7 @@ const ImageScreen: FC = () => {
   const [offset, setOffset] = useState(0);
   const [imgData, setImgData] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [screenLoader, setScreenLoader] = useState<boolean>(false);
 
   const handleImagePress = (item: ImageData) => {
     navigate(Routes.DetailsScreen, {item: item});
@@ -31,30 +34,47 @@ const ImageScreen: FC = () => {
   const handleLoadMore = () => {
     if (!loading) {
       setLoading(true);
-      setOffset(offset + 1);
+      fetchImages(offset + 1);
     }
   };
 
-  const fetchAspectRatio = async (image: ImageData) => {
+  const formatImageUrl = (url: string): string => {
+    if (url.startsWith('//')) {
+      return `https:${url}`;
+    }
+    if (url.startsWith('http:')) {
+      return url.replace('http:', 'https:');
+    }
+    return url;
+  };
+
+  const fetchAspectRatio = useCallback(async (image: ImageData) => {
     return new Promise<ImageData>(resolve => {
+      const formattedUrl = formatImageUrl(image.xt_image);
       Image.getSize(
-        image.xt_image,
+        formattedUrl,
         (width, height) => {
-          resolve({...image, aspectRatio: width / height});
+          resolve({
+            ...image,
+            xt_image: formattedUrl,
+            aspectRatio: width / height,
+          });
         },
         () => {
-          resolve({...image, aspectRatio: 1});
+          resolve({...image, xt_image: formattedUrl, aspectRatio: 1});
         },
       );
     });
-  };
+  }, []);
 
   const renderItem = ({item}: {item: ImageData}) => (
     <TouchableOpacity
       onPress={() => handleImagePress(item)}
       style={styles.imageContainer}>
       <Image
-        source={{uri: item.xt_image}}
+        source={{
+          uri: item.xt_image,
+        }}
         style={[
           styles.image,
           item.aspectRatio ? {aspectRatio: item.aspectRatio} : {},
@@ -72,26 +92,40 @@ const ImageScreen: FC = () => {
     />
   );
 
-  useEffect(() => {
-    const fetchImages = async () => {
-      setLoading(true);
+  const fetchImages = useCallback(
+    async (val: number) => {
       try {
-        const res = await getImages(offset);
+        const res = await getImages(val);
         const updatedImages = await Promise.all(
           res?.images.map((img: ImageData) => fetchAspectRatio(img)),
         );
         setImgData(prev => [...prev, ...updatedImages]);
+        setOffset(val);
       } catch (error) {
         console.log('Error Fetch to images', error);
+        Alert.alert('Error', 'Network Error');
       } finally {
         setLoading(false);
+        setScreenLoader(false);
       }
-    };
-    fetchImages();
-  }, [offset]);
+    },
+    [fetchAspectRatio],
+  );
+
+  useEffect(() => {
+    if (offset === 0) {
+      setScreenLoader(true);
+      fetchImages(0);
+    }
+  }, [fetchImages, offset]);
 
   return (
     <View style={styles.container}>
+      {screenLoader && (
+        <View style={styles.contentConatiner}>
+          <ActivityIndicator size={'large'} color={Colors.primary} />
+        </View>
+      )}
       {imgData.length > 0 ? (
         <FlatList
           data={imgData}
@@ -100,11 +134,13 @@ const ImageScreen: FC = () => {
           showsVerticalScrollIndicator={false}
           ListFooterComponent={imgData.length % 10 === 0 ? renderFooter : null}
         />
-      ) : (
+      ) : !screenLoader ? (
         <View style={styles.contentConatiner}>
-          <ActivityIndicator size={'large'} color={Colors.primary} />
+          <CustomText variant="h8" fontFamily={Fonts.SemiBold}>
+            No Data
+          </CustomText>
         </View>
-      )}
+      ) : null}
     </View>
   );
 };
@@ -126,6 +162,8 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     resizeMode: 'contain',
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   contentConatiner: {
     alignItems: 'center',
